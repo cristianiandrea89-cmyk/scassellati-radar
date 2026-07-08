@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { CATEGORIE_MACCHINA, ZONE_COMMERCIALI, VENDITORI } from '../lib/constants'
 
@@ -43,6 +43,9 @@ export default function ListaPage() {
   const [categoriaFiltro, setCategoriaFiltro] = useState('')
   const [zonaFiltro, setZonaFiltro] = useState('')
   const [agenteFiltro, setAgenteFiltro] = useState('')
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const [errorElimina, setErrorElimina] = useState('')
 
   useEffect(() => {
     supabase
@@ -60,6 +63,21 @@ export default function ListaPage() {
         setLoading(false)
       })
   }, [])
+
+  async function eliminaMacchina(id) {
+    setDeletingId(id)
+    setErrorElimina('')
+    try {
+      const { error: deleteError } = await supabase.from('macchine_installate').delete().eq('id', id)
+      if (deleteError) throw deleteError
+      setMacchine((rows) => rows.filter((r) => r.id !== id))
+      setPendingDeleteId(null)
+    } catch (err) {
+      setErrorElimina(err.message || "Errore durante l'eliminazione.")
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const marchiDisponibili = useMemo(
     () => [...new Set(macchine.map((m) => m.marchi?.nome).filter(Boolean))].sort(),
@@ -173,17 +191,50 @@ export default function ListaPage() {
                       <p className="text-xs text-dgray/50">
                         {m.inserito_da} — {m.updated_at ? new Date(m.updated_at).toLocaleDateString('it-IT') : '—'}
                       </p>
-                      <Link
-                        to={`/clienti/${m.cliente_id}`}
-                        className="flex items-center gap-1 text-xs font-medium text-bronze hover:text-dgray transition-colors"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        Modifica
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/clienti/${m.cliente_id}`}
+                          className="flex items-center gap-1 text-xs font-medium text-bronze hover:text-dgray transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Modifica
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setPendingDeleteId(m.id)}
+                          className="flex items-center gap-1 text-xs font-medium text-dgray/50 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Elimina
+                        </button>
+                      </div>
                     </div>
+
+                    {pendingDeleteId === m.id && (
+                      <div className="flex flex-wrap items-center gap-3 mt-2 pt-2 border-t border-gray/20">
+                        <span className="text-xs text-red-600">Eliminare questa macchina?</span>
+                        <button
+                          type="button"
+                          onClick={() => eliminaMacchina(m.id)}
+                          disabled={deletingId === m.id}
+                          className="text-xs text-red-600 font-medium hover:underline disabled:opacity-50"
+                        >
+                          {deletingId === m.id ? 'Elimino…' : 'Conferma eliminazione'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingDeleteId(null)}
+                          className="text-xs text-dgray/50 hover:underline"
+                        >
+                          Annulla
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+
+              {errorElimina && <p className="text-sm text-red-600 mt-2">{errorElimina}</p>}
 
               {/* Desktop: tabella */}
               <div className="hidden md:block bg-white border border-gray/60 rounded-lg overflow-x-auto">
@@ -225,13 +276,43 @@ export default function ListaPage() {
                           {m.updated_at ? new Date(m.updated_at).toLocaleDateString('it-IT') : '—'}
                         </td>
                         <td className="px-4 py-3">
-                          <Link
-                            to={`/clienti/${m.cliente_id}`}
-                            className="flex items-center gap-1 text-xs font-medium text-bronze hover:text-dgray transition-colors whitespace-nowrap"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                            Modifica
-                          </Link>
+                          {pendingDeleteId === m.id ? (
+                            <div className="flex items-center gap-3 whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => eliminaMacchina(m.id)}
+                                disabled={deletingId === m.id}
+                                className="text-xs text-red-600 font-medium hover:underline disabled:opacity-50"
+                              >
+                                {deletingId === m.id ? 'Elimino…' : 'Conferma'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDeleteId(null)}
+                                className="text-xs text-dgray/50 hover:underline"
+                              >
+                                Annulla
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3 whitespace-nowrap">
+                              <Link
+                                to={`/clienti/${m.cliente_id}`}
+                                className="flex items-center gap-1 text-xs font-medium text-bronze hover:text-dgray transition-colors"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                Modifica
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDeleteId(m.id)}
+                                className="flex items-center gap-1 text-xs font-medium text-dgray/50 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Elimina
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
