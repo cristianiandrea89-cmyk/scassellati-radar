@@ -42,6 +42,20 @@ export default function MarchioAutocomplete({ marchi, origine, value, onSelect, 
     if (!e.target.value) onSelect(null)
   }
 
+  function handleBlur() {
+    // Se l'utente ha scritto esattamente il nome di un marchio esistente ma non ha
+    // cliccato il suggerimento (es. per fretta sul campo), lo selezioniamo comunque:
+    // altrimenti il salvataggio fallisce in silenzio perché marchioId resta vuoto.
+    if (value) return
+    const testo = inputText.trim().toLowerCase()
+    if (!testo) return
+    const match = marchi.find((m) => m.origine === origineMarchio && m.nome.trim().toLowerCase() === testo)
+    if (match) {
+      setInputText(match.nome)
+      onSelect(match)
+    }
+  }
+
   function handleSelect(m) {
     setInputText(m.nome)
     setOpen(false)
@@ -69,6 +83,7 @@ export default function MarchioAutocomplete({ marchi, origine, value, onSelect, 
         value={inputText}
         onChange={handleChange}
         onFocus={() => setOpen(true)}
+        onBlur={handleBlur}
         disabled={disabled}
         placeholder={disabled ? "Scegli prima l'origine" : 'Cerca o aggiungi marchio…'}
         className="w-full border border-gray/40 rounded-sm px-3 py-2 text-sm focus:border-bronze outline-none disabled:bg-gray/10"
