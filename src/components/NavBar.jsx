@@ -27,7 +27,7 @@ export default function NavBar() {
               }`
             }
           >
-            <Icon className="w-5 h-5 sm:w-4 sm:h-4" strokeWidth={1.5} />
+            <Icon className="w-7 h-7 sm:w-5 sm:h-5" strokeWidth={1.5} />
             <span className="hidden sm:inline">{label}</span>
           </NavLink>
         ))}
@@ -39,7 +39,7 @@ export default function NavBar() {
             }`
           }
         >
-          <Tag className="w-4 h-4 sm:w-[13px] sm:h-[13px]" strokeWidth={1.5} />
+          <Tag className="w-6 h-6 sm:w-4 sm:h-4" strokeWidth={1.5} />
           <span className="hidden sm:inline">Marchi</span>
         </NavLink>
       </div>
