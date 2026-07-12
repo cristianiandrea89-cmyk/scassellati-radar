@@ -60,9 +60,10 @@ export default function ClienteAutocomplete({ clienti, value, onChange, classNam
               <button
                 type="button"
                 onClick={() => handleSelect(c.ragione_sociale)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-offwhite transition-colors"
+                className="w-full flex items-center justify-between gap-2 text-left px-3 py-2 text-sm hover:bg-offwhite transition-colors"
               >
-                {c.ragione_sociale}
+                <span>{c.ragione_sociale}</span>
+                {c.verificato === false && <span className="text-[10px] text-bronze shrink-0">da verificare</span>}
               </button>
             </li>
           ))}

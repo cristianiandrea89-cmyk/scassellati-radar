@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage'
 import NuovaMacchinaPage from './pages/NuovaMacchinaPage'
 import ClientePage from './pages/ClientePage'
 import MarchiPage from './pages/MarchiPage'
+import ClientiVerificaPage from './pages/ClientiVerificaPage'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               <Route path="/nuova-macchina" element={<NuovaMacchinaPage />} />
               <Route path="/clienti/:id" element={<ClientePage />} />
               <Route path="/marchi" element={<MarchiPage />} />
+              <Route path="/clienti-verifica" element={<ClientiVerificaPage />} />
             </Routes>
           </main>
         </BrowserRouter>

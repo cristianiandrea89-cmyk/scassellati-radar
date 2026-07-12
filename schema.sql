@@ -21,6 +21,8 @@ create table if not exists clienti (
   referente_ruolo text,
   referente_contatti text,
   agente text,
+  verificato boolean not null default true,
+  creato_da text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -29,10 +31,13 @@ comment on table clienti is 'Anagrafica clienti presso cui sono installate macch
 comment on column clienti.lat is 'Latitudine, ottenuta via geocoding dell''indirizzo (Nominatim/OpenStreetMap)';
 comment on column clienti.lng is 'Longitudine, ottenuta via geocoding dell''indirizzo (Nominatim/OpenStreetMap)';
 comment on column clienti.agente is 'Nome dell''agente/venditore di riferimento per questo cliente — uno dei 5 nomi fissi (vedi VENDITORI in constants.js), scelto da un menu a tendina, non testo libero';
+comment on column clienti.verificato is 'false per i clienti creati al volo da un venditore nel form macchina (in attesa di conferma/uniformazione nome in /clienti-verifica); true per quelli già noti (import iniziale) o confermati';
+comment on column clienti.creato_da is 'Nome del venditore che ha creato il cliente da form (null per i clienti importati inizialmente)';
 
 create index if not exists idx_clienti_ragione_sociale on clienti using gin (to_tsvector('simple', ragione_sociale));
 create index if not exists idx_clienti_agente on clienti (agente);
 create index if not exists idx_clienti_zona on clienti (zona_commerciale);
+create index if not exists idx_clienti_verificato on clienti (verificato);
 
 -- ============================================================
 -- SEDI (opzionale — un cliente può avere più stabilimenti)

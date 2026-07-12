@@ -52,7 +52,7 @@ export default function NuovaMacchinaPage() {
   useEffect(() => {
     supabase
       .from('clienti')
-      .select('id, ragione_sociale, indirizzo')
+      .select('id, ragione_sociale, indirizzo, verificato')
       .then(({ data }) => {
         if (data) setClienti(data)
       })
@@ -190,6 +190,8 @@ export default function NuovaMacchinaPage() {
           indirizzo: cliente.indirizzo.trim(),
           lat,
           lng,
+          verificato: false,
+          creato_da: nomeEffettivo,
         }
       }
 
@@ -210,7 +212,10 @@ export default function NuovaMacchinaPage() {
           const { error: clienteErr } = await supabase.from('clienti').insert(clienteNuovo)
           if (clienteErr) throw clienteErr
           clienteId = clienteNuovo.id
-          setClienti((prev) => [...prev, { id: clienteId, ragione_sociale: clienteNuovo.ragione_sociale, indirizzo: clienteNuovo.indirizzo }])
+          setClienti((prev) => [
+            ...prev,
+            { id: clienteId, ragione_sociale: clienteNuovo.ragione_sociale, indirizzo: clienteNuovo.indirizzo, verificato: false },
+          ])
         }
 
         const { error: macchineErr } = await supabase
