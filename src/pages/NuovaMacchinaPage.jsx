@@ -8,6 +8,7 @@ import { useCurrentUser } from '../hooks/useCurrentUser'
 import { CATEGORIE_MACCHINA, VENDITORI } from '../lib/constants'
 import Button from '../components/Button'
 import AddressAutocompleteInput from '../components/AddressAutocompleteInput'
+import ClienteAutocomplete from '../components/ClienteAutocomplete'
 import UseMyLocationButton from '../components/UseMyLocationButton'
 import MacchinaRowFields from '../components/MacchinaRowFields'
 
@@ -278,20 +279,14 @@ export default function NuovaMacchinaPage() {
 
           <div>
             <label className={labelClass}>Cliente *</label>
-            <input
-              list="clienti-list"
-              type="text"
+            <ClienteAutocomplete
+              clienti={clienti}
               required
               value={cliente.ragioneSociale}
-              onChange={(e) => setCliente((c) => ({ ...c, ragioneSociale: e.target.value }))}
+              onChange={(nome) => setCliente((c) => ({ ...c, ragioneSociale: nome }))}
               className={fieldClass}
               placeholder="Ragione sociale cliente"
             />
-            <datalist id="clienti-list">
-              {clienti.map((c) => (
-                <option key={c.id} value={c.ragione_sociale} />
-              ))}
-            </datalist>
           </div>
 
           <div>
