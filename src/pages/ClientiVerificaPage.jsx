@@ -321,10 +321,16 @@ function TuttiClientiTab() {
     ricarica()
   }, [])
 
-  const filtrati = useMemo(() => {
+  const LIMITE_RISULTATI = 30
+
+  const risultatiCompleti = useMemo(() => {
     const testo = search.trim().toLowerCase()
-    return clienti.filter((c) => !testo || c.ragione_sociale.toLowerCase().includes(testo))
+    if (!testo) return []
+    return clienti.filter((c) => c.ragione_sociale.toLowerCase().includes(testo))
   }, [clienti, search])
+
+  const filtrati = risultatiCompleti.slice(0, LIMITE_RISULTATI)
+  const altriRisultati = risultatiCompleti.length - filtrati.length
 
   return (
     <div>
@@ -339,7 +345,7 @@ function TuttiClientiTab() {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Cerca cliente…"
+        placeholder="Scrivi il nome di un cliente per cercarlo…"
         className={`${inputClass} max-w-xs mb-4`}
       />
 
@@ -347,7 +353,9 @@ function TuttiClientiTab() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
-        filtrati.length === 0 ? (
+        !search.trim() ? (
+          <p className="text-dgray/50 text-sm">Scrivi almeno una lettera per cercare tra i {clienti.length} clienti.</p>
+        ) : filtrati.length === 0 ? (
           <div className="bg-white border border-gray/60 rounded-lg p-6">
             <p className="text-dgray/70">Nessun cliente corrisponde alla ricerca.</p>
           </div>
@@ -361,6 +369,11 @@ function TuttiClientiTab() {
                 onAggiornato={ricarica}
               />
             ))}
+            {altriRisultati > 0 && (
+              <p className="text-xs text-dgray/50 px-1">
+                Altri {altriRisultati} risultati non mostrati — affina la ricerca.
+              </p>
+            )}
           </div>
         )
       )}
