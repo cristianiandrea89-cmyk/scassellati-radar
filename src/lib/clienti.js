@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { normalizza } from './normalizza'
 
 export async function fetchClienti() {
   const { data, error } = await supabase
@@ -9,16 +10,26 @@ export async function fetchClienti() {
   return data
 }
 
-export async function creaClienteVerificato(ragioneSociale) {
+export async function creaClienteVerificato(ragioneSociale, { forza = false } = {}) {
   const nomeTrim = ragioneSociale.trim()
+  const nomeNormalizzato = normalizza(nomeTrim)
 
-  const { data: esistente, error: findErr } = await supabase
-    .from('clienti')
-    .select('id, ragione_sociale, verificato')
-    .ilike('ragione_sociale', nomeTrim)
-    .maybeSingle()
+  const { data: tutti, error: findErr } = await supabase.from('clienti').select('id, ragione_sociale, verificato')
   if (findErr) throw findErr
+
+  const esistente = tutti.find((c) => normalizza(c.ragione_sociale) === nomeNormalizzato)
   if (esistente) return { ...esistente, giaEsistente: true }
+
+  if (!forza) {
+    // Nessuna corrispondenza esatta, ma potrebbe essere un'abbreviazione di un cliente
+    // già presente (es. "tmp" per "T.M.P. DI LIONETTI..."): segnaliamo senza bloccare,
+    // sarà l'utente a decidere se è davvero un cliente diverso.
+    const candidati = tutti.filter((c) => {
+      const nomeEsistente = normalizza(c.ragione_sociale)
+      return nomeEsistente && (nomeEsistente.includes(nomeNormalizzato) || nomeNormalizzato.includes(nomeEsistente))
+    })
+    if (candidati.length > 0) return { possibileDuplicato: true, candidati }
+  }
 
   const { data, error } = await supabase
     .from('clienti')
@@ -57,15 +68,16 @@ export async function confermaCliente(id) {
 
 export async function rinominaEConfermaCliente(id, nome) {
   const nomeTrim = nome.trim()
+  const nomeNormalizzato = normalizza(nomeTrim)
 
-  const { data: duplicato, error: findErr } = await supabase
+  const { data: verificati, error: findErr } = await supabase
     .from('clienti')
     .select('id, ragione_sociale')
     .neq('id', id)
     .eq('verificato', true)
-    .ilike('ragione_sociale', nomeTrim)
-    .maybeSingle()
   if (findErr) throw findErr
+
+  const duplicato = verificati.find((c) => normalizza(c.ragione_sociale) === nomeNormalizzato) || null
 
   if (duplicato) {
     // Nome uniformato a un cliente già verificato: le macchine del duplicato confluiscono

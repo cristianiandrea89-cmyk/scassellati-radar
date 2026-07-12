@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-
-// Confronto "tollerante": ignora punteggiatura, spazi e maiuscole/minuscole, così
-// cercando "ILM" si trova anche "I.L.M." (o viceversa).
-function normalizza(testo) {
-  return testo.toLowerCase().replace(/[^a-z0-9]/g, '')
-}
+import { normalizza } from '../lib/normalizza'
 
 export default function ClienteAutocomplete({ clienti, value, onChange, className, placeholder, required }) {
   const [open, setOpen] = useState(false)

@@ -247,15 +247,19 @@ function NuovoClienteForm({ onCreato }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [messaggio, setMessaggio] = useState('')
+  const [candidatiSimili, setCandidatiSimili] = useState(null)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!nome.trim()) return
+  async function tentaCreazione(forza) {
     setSaving(true)
     setError('')
     setMessaggio('')
     try {
-      const risultato = await creaClienteVerificato(nome)
+      const risultato = await creaClienteVerificato(nome, { forza })
+      if (risultato.possibileDuplicato) {
+        setCandidatiSimili(risultato.candidati)
+        return
+      }
+      setCandidatiSimili(null)
       setMessaggio(
         risultato.giaEsistente
           ? `"${risultato.ragione_sociale}" era già in elenco.`
@@ -270,6 +274,12 @@ function NuovoClienteForm({ onCreato }) {
     }
   }
 
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (!nome.trim()) return
+    tentaCreazione(false)
+  }
+
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray/60 rounded-lg p-4 mb-4 space-y-2">
       <p className="text-sm font-medium">Aggiungi un cliente</p>
@@ -277,7 +287,10 @@ function NuovoClienteForm({ onCreato }) {
         <input
           type="text"
           value={nome}
-          onChange={(e) => setNome(e.target.value)}
+          onChange={(e) => {
+            setNome(e.target.value)
+            setCandidatiSimili(null)
+          }}
           placeholder="Ragione sociale"
           className={inputClass}
         />
@@ -290,6 +303,34 @@ function NuovoClienteForm({ onCreato }) {
           {saving ? 'Aggiungo…' : 'Aggiungi'}
         </button>
       </div>
+
+      {candidatiSimili && (
+        <div className="bg-offwhite/60 border border-gray/40 rounded-sm p-3 space-y-2">
+          <p className="text-xs text-dgray/70">
+            Forse esiste già un cliente simile:{' '}
+            {candidatiSimili.map((c) => `"${c.ragione_sociale}"`).join(', ')}. Aggiungere comunque "{nome.trim()}"
+            come cliente distinto?
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => tentaCreazione(true)}
+              disabled={saving}
+              className="text-xs text-bronze font-medium hover:underline disabled:opacity-50"
+            >
+              {saving ? 'Aggiungo…' : 'Aggiungi comunque'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCandidatiSimili(null)}
+              className="text-xs text-dgray/50 hover:underline"
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
+
       {messaggio && <p className="text-xs text-green-700">{messaggio}</p>}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </form>
