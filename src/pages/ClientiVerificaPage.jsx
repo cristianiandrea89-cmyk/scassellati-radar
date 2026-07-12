@@ -386,7 +386,7 @@ function TuttiClientiTab() {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Scrivi il nome di un cliente per cercarlo…"
+        placeholder="Cerca cliente…"
         className={`${inputClass} max-w-xs mb-4`}
       />
 
