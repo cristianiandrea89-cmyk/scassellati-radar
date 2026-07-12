@@ -1,14 +1,15 @@
 import { NavLink } from 'react-router-dom'
-import { Map, Table, PlusCircle } from 'lucide-react'
+import { Map, PlusCircle } from 'lucide-react'
 import MachiningIcon from './icons/MachiningIcon'
 import PeopleGroupIcon from './icons/PeopleGroupIcon'
 import HomeIcon from './icons/HomeIcon'
+import ChecklistIcon from './icons/ChecklistIcon'
 
 const links = [
   { to: '/', label: 'Dashboard', icon: HomeIcon, end: true },
   { to: '/nuova-macchina', label: 'Macchina', icon: PlusCircle },
   { to: '/mappa', label: 'Mappa', icon: Map },
-  { to: '/lista', label: 'Lista', icon: Table },
+  { to: '/lista', label: 'Lista', icon: ChecklistIcon },
 ]
 
 export default function NavBar() {
