@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 
+// Confronto "tollerante": ignora punteggiatura, spazi e maiuscole/minuscole, così
+// cercando "ILM" si trova anche "I.L.M." (o viceversa).
+function normalizza(testo) {
+  return testo.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 export default function ClienteAutocomplete({ clienti, value, onChange, className, placeholder, required }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
@@ -12,13 +18,16 @@ export default function ClienteAutocomplete({ clienti, value, onChange, classNam
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const testoNormalizzato = normalizza(value.trim())
+
   const suggerimenti = useMemo(() => {
-    const testo = value.trim().toLowerCase()
-    if (!testo) return []
+    if (!testoNormalizzato) return []
     return clienti
-      .filter((c) => c.ragione_sociale.toLowerCase().includes(testo))
+      .filter((c) => normalizza(c.ragione_sociale).includes(testoNormalizzato))
       .slice(0, 8)
-  }, [clienti, value])
+  }, [clienti, testoNormalizzato])
+
+  const esisteEsatto = clienti.some((c) => normalizza(c.ragione_sociale) === testoNormalizzato)
 
   function handleChange(e) {
     onChange(e.target.value)
@@ -29,6 +38,8 @@ export default function ClienteAutocomplete({ clienti, value, onChange, classNam
     onChange(nome)
     setOpen(false)
   }
+
+  const mostraDropdown = open && (suggerimenti.length > 0 || (testoNormalizzato && !esisteEsatto))
 
   return (
     <div ref={containerRef} className="relative">
@@ -42,7 +53,7 @@ export default function ClienteAutocomplete({ clienti, value, onChange, classNam
         className={className}
         autoComplete="off"
       />
-      {open && suggerimenti.length > 0 && (
+      {mostraDropdown && (
         <ul className="absolute z-20 mt-1 w-full bg-white border border-gray/40 rounded-sm max-h-56 overflow-auto">
           {suggerimenti.map((c) => (
             <li key={c.id}>
@@ -55,6 +66,18 @@ export default function ClienteAutocomplete({ clienti, value, onChange, classNam
               </button>
             </li>
           ))}
+
+          {testoNormalizzato && !esisteEsatto && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="w-full text-left px-3 py-2 text-sm text-bronze hover:bg-offwhite transition-colors"
+              >
+                + Nuovo cliente: "{value.trim()}"
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>
