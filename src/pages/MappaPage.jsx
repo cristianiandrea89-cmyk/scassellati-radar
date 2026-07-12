@@ -90,7 +90,7 @@ export default function MappaPage() {
 
       {!loading && !error && (
         <>
-          <div className="bg-white border border-gray/60 rounded-lg overflow-hidden" style={{ height: '600px' }}>
+          <div className="bg-white border border-gray/60 rounded-lg overflow-hidden h-[420px] md:h-[600px]">
             <MapContainer
               center={singlePoint ? [singlePoint.lat, singlePoint.lng] : ITALY_CENTER}
               zoom={singlePoint ? 13 : ITALY_ZOOM}
