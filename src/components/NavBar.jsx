@@ -1,8 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Map, Table, PlusCircle, Tag } from 'lucide-react'
+import { Map, Table, PlusCircle } from 'lucide-react'
+import MachiningIcon from './icons/MachiningIcon'
+import PeopleGroupIcon from './icons/PeopleGroupIcon'
+import HomeIcon from './icons/HomeIcon'
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/', label: 'Dashboard', icon: HomeIcon, end: true },
   { to: '/nuova-macchina', label: 'Macchina', icon: PlusCircle },
   { to: '/mappa', label: 'Mappa', icon: Map },
   { to: '/lista', label: 'Lista', icon: Table },
@@ -39,8 +42,19 @@ export default function NavBar() {
             }`
           }
         >
-          <Tag className="w-6 h-6 sm:w-4 sm:h-4" strokeWidth={1.5} />
+          <MachiningIcon className="w-6 h-6 sm:w-4 sm:h-4" />
           <span className="hidden sm:inline">Marchi</span>
+        </NavLink>
+        <NavLink
+          to="/clienti-verifica"
+          className={({ isActive }) =>
+            `flex items-center gap-1 text-xs whitespace-nowrap transition-colors ${
+              isActive ? 'text-bronze' : 'text-gray/60 hover:text-bronze'
+            }`
+          }
+        >
+          <PeopleGroupIcon className="w-6 h-6 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Clienti</span>
         </NavLink>
       </div>
     </nav>
