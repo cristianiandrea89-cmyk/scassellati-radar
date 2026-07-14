@@ -7,7 +7,7 @@ import {
   distribuzionePerCategoria,
   distribuzionePerMarchio,
   origineByCategoria,
-  distribuzionePerCitta,
+  distribuzionePerProvincia,
 } from '../lib/dashboardData'
 import { fetchMarchi } from '../lib/marchi'
 import { CATEGORIE_MACCHINA, STATI_MACCHINA, ZONE_COMMERCIALI, VENDITORI } from '../lib/constants'
@@ -18,7 +18,7 @@ import OrigineDonutChart from '../components/dashboard/charts/OrigineDonutChart'
 import CategoriaBarChart from '../components/dashboard/charts/CategoriaBarChart'
 import MarchioBarChart from '../components/dashboard/charts/MarchioBarChart'
 import OrigineCategoriaBarChart from '../components/dashboard/charts/OrigineCategoriaBarChart'
-import CittaBarChart from '../components/dashboard/charts/CittaBarChart'
+import ProvinciaBarChart from '../components/dashboard/charts/ProvinciaBarChart'
 
 const filtriVuoti = {
   origine: 'tutte',
@@ -56,7 +56,7 @@ export default function DashboardPage() {
   const datiCategoria = useMemo(() => distribuzionePerCategoria(macchineFiltrate), [macchineFiltrate])
   const datiMarchio = useMemo(() => distribuzionePerMarchio(macchineFiltrate), [macchineFiltrate])
   const datiOrigineCategoria = useMemo(() => origineByCategoria(macchineFiltrate), [macchineFiltrate])
-  const datiCitta = useMemo(() => distribuzionePerCitta(macchineFiltrate), [macchineFiltrate])
+  const datiProvincia = useMemo(() => distribuzionePerProvincia(macchineFiltrate), [macchineFiltrate])
 
   const nessunDato = !loading && !error && macchineFiltrate.length === 0
 
@@ -189,8 +189,8 @@ export default function DashboardPage() {
                 <OrigineCategoriaBarChart data={datiOrigineCategoria} />
               </ChartCard>
 
-              <ChartCard title="Clienti per città (stima da indirizzo)" isEmpty={datiCitta.length === 0}>
-                <CittaBarChart data={datiCitta} />
+              <ChartCard title="Clienti per provincia (stima da indirizzo)" isEmpty={datiProvincia.length === 0}>
+                <ProvinciaBarChart data={datiProvincia} />
               </ChartCard>
             </div>
           )}

@@ -102,17 +102,67 @@ export function estraiCitta(indirizzo) {
   return parti[parti.length - 2]
 }
 
-export function distribuzionePerCitta(macchine) {
+// Comune capoluogo (minuscolo) -> sigla provincia. Usata come ultima spiaggia quando
+// l'indirizzo non riporta la sigla in modo esplicito (tipico degli indirizzi
+// geocodificati via Nominatim, che spesso restituiscono solo il nome del comune).
+const CAPOLUOGHI_PROVINCIA = {
+  "l'aquila": 'AQ', chieti: 'CH', pescara: 'PE', teramo: 'TE',
+  potenza: 'PZ', matera: 'MT',
+  catanzaro: 'CZ', cosenza: 'CS', crotone: 'KR', 'reggio calabria': 'RC', 'vibo valentia': 'VV',
+  napoli: 'NA', avellino: 'AV', benevento: 'BN', caserta: 'CE', salerno: 'SA',
+  bologna: 'BO', ferrara: 'FE', "forlì": 'FC', modena: 'MO', parma: 'PR', piacenza: 'PC', ravenna: 'RA', 'reggio emilia': 'RE', rimini: 'RN',
+  trieste: 'TS', gorizia: 'GO', pordenone: 'PN', udine: 'UD',
+  roma: 'RM', frosinone: 'FR', latina: 'LT', rieti: 'RI', viterbo: 'VT',
+  genova: 'GE', imperia: 'IM', 'la spezia': 'SP', savona: 'SV',
+  milano: 'MI', bergamo: 'BG', brescia: 'BS', como: 'CO', cremona: 'CR', lecco: 'LC', lodi: 'LO', mantova: 'MN', monza: 'MB', pavia: 'PV', sondrio: 'SO', varese: 'VA',
+  ancona: 'AN', 'ascoli piceno': 'AP', fermo: 'FM', macerata: 'MC', pesaro: 'PU',
+  campobasso: 'CB', isernia: 'IS',
+  torino: 'TO', alessandria: 'AL', asti: 'AT', biella: 'BI', cuneo: 'CN', novara: 'NO', verbania: 'VB', vercelli: 'VC',
+  bari: 'BA', barletta: 'BT', brindisi: 'BR', foggia: 'FG', lecce: 'LE', taranto: 'TA',
+  cagliari: 'CA', nuoro: 'NU', oristano: 'OR', sassari: 'SS', 'sud sardegna': 'SU',
+  palermo: 'PA', agrigento: 'AG', caltanissetta: 'CL', catania: 'CT', enna: 'EN', messina: 'ME', ragusa: 'RG', siracusa: 'SR', trapani: 'TP',
+  firenze: 'FI', arezzo: 'AR', grosseto: 'GR', livorno: 'LI', lucca: 'LU', massa: 'MS', pisa: 'PI', pistoia: 'PT', prato: 'PO', siena: 'SI',
+  trento: 'TN', bolzano: 'BZ',
+  perugia: 'PG', terni: 'TR',
+  aosta: 'AO',
+  venezia: 'VE', belluno: 'BL', padova: 'PD', rovigo: 'RO', treviso: 'TV', verona: 'VR', vicenza: 'VI',
+}
+
+// Estrazione best-effort della provincia dall'indirizzo (testo libero): cerca prima una
+// sigla esplicita a due lettere (es. "..., FR, Italia" oppure "00013 Mentana RM"), e solo
+// se non la trova prova a dedurla dal nome del comune tramite la mappa dei capoluoghi.
+export function estraiProvincia(indirizzo) {
+  if (!indirizzo) return null
+  let parti = indirizzo.split(',').map((s) => s.trim()).filter(Boolean)
+
+  const ultimo = parti[parti.length - 1]
+  if (ultimo && /^(italia|italy)$/i.test(ultimo)) parti = parti.slice(0, -1)
+
+  const siglaSegmento = parti.find((p) => /^[A-Z]{2}$/.test(p))
+  if (siglaSegmento) return siglaSegmento
+
+  const segmentoConCapESigla = parti.find((p) => /^\d{4,6}\s+.+\s[A-Z]{2}$/.test(p))
+  if (segmentoConCapESigla) {
+    const match = segmentoConCapESigla.match(/([A-Z]{2})$/)
+    if (match) return match[1]
+  }
+
+  const citta = estraiCitta(indirizzo)
+  if (!citta) return null
+  return CAPOLUOGHI_PROVINCIA[citta.toLowerCase()] || citta
+}
+
+export function distribuzionePerProvincia(macchine) {
   const conteggi = {}
   const clientiVisti = new Set()
   macchine.forEach((m) => {
     if (clientiVisti.has(m.cliente_id)) return
     clientiVisti.add(m.cliente_id)
-    const citta = estraiCitta(m.clienti?.indirizzo)
-    if (!citta) return
-    conteggi[citta] = (conteggi[citta] || 0) + 1
+    const provincia = estraiProvincia(m.clienti?.indirizzo)
+    if (!provincia) return
+    conteggi[provincia] = (conteggi[provincia] || 0) + 1
   })
   return Object.entries(conteggi)
-    .map(([citta, count]) => ({ citta, count }))
+    .map(([provincia, count]) => ({ provincia, count }))
     .sort((a, b) => b.count - a.count)
 }

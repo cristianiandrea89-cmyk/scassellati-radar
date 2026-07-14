@@ -2,7 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Respons
 import ChartTooltip from '../ChartTooltip'
 import { BRONZE, GRID, AXIS_TEXT } from '../../../lib/chartColors'
 
-export default function CittaBarChart({ data }) {
+export default function ProvinciaBarChart({ data }) {
   const height = Math.max(200, data.length * 32 + 20)
 
   return (
@@ -12,7 +12,7 @@ export default function CittaBarChart({ data }) {
         <XAxis type="number" tick={{ fill: AXIS_TEXT, fontSize: 12 }} allowDecimals={false} />
         <YAxis
           type="category"
-          dataKey="citta"
+          dataKey="provincia"
           width={130}
           tick={{ fill: AXIS_TEXT, fontSize: 12 }}
           axisLine={false}
