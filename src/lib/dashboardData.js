@@ -80,6 +80,19 @@ export function estraiCitta(indirizzo) {
   const ultimo = parti[parti.length - 1]
   if (ultimo && /^(italia|italy)$/i.test(ultimo)) parti = parti.slice(0, -1)
 
+  // Alcuni indirizzi hanno CAP e città nello stesso segmento (es. "00013 Mentana RM"):
+  // meglio estrarre la città direttamente da lì che indovinare la posizione del segmento,
+  // altrimenti un civico scritto come segmento a sé (es. "Via X, 19/21, 00013 Mentana RM")
+  // viene scambiato per la città.
+  const segmentoConCap = parti.find((p) => /^\d{4,6}\s+\S/.test(p))
+  if (segmentoConCap) {
+    const citta = segmentoConCap
+      .replace(/^\d{4,6}\s+/, '')
+      .replace(/\s+[A-Z]{2}$/, '')
+      .trim()
+    if (citta) return citta
+  }
+
   const nuovoUltimo = parti[parti.length - 1]
   if (nuovoUltimo && /^\d{4,6}$/.test(nuovoUltimo)) parti = parti.slice(0, -1)
 
