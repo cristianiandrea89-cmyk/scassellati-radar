@@ -148,8 +148,8 @@ export default function NuovaMacchinaPage() {
       setError('Il cliente è obbligatorio.')
       return
     }
-    if (!clienteEsistente && !cliente.indirizzo.trim()) {
-      setError("Inserisci l'indirizzo per un nuovo cliente (serve per la mappa).")
+    if (!cliente.indirizzo.trim()) {
+      setError("Inserisci l'indirizzo del cliente (serve per comparire sulla mappa).")
       return
     }
     const rigaInvalidaIndex = macchine.findIndex(
@@ -169,13 +169,16 @@ export default function NuovaMacchinaPage() {
       let clienteId = clienteEsistente?.id
       let clienteNuovo = null
 
+      const indirizzoAttuale = cliente.indirizzo.trim()
+      const indirizzoEsistentePrima = (clienteEsistente?.indirizzo || '').trim()
+
       if (!clienteId) {
         let lat = indirizzoCoords?.lat ?? null
         let lng = indirizzoCoords?.lng ?? null
 
         if (lat == null || lng == null) {
           try {
-            const geo = await geocodeAddress(cliente.indirizzo)
+            const geo = await geocodeAddress(indirizzoAttuale)
             lat = geo.lat
             lng = geo.lng
           } catch {
@@ -187,11 +190,31 @@ export default function NuovaMacchinaPage() {
         clienteNuovo = {
           id: crypto.randomUUID(),
           ragione_sociale: cliente.ragioneSociale.trim(),
-          indirizzo: cliente.indirizzo.trim(),
+          indirizzo: indirizzoAttuale,
           lat,
           lng,
           verificato: false,
           creato_da: nomeEffettivo,
+        }
+      } else if (indirizzoAttuale !== indirizzoEsistentePrima) {
+        // Cliente già esistente ma senza indirizzo (o corretto qui): aggiorniamo subito
+        // la sua scheda, altrimenti resterebbe invisibile in mappa come se nulla fosse.
+        try {
+          let lat = indirizzoCoords?.lat ?? null
+          let lng = indirizzoCoords?.lng ?? null
+          if (lat == null || lng == null) {
+            const geo = await geocodeAddress(indirizzoAttuale)
+            lat = geo.lat
+            lng = geo.lng
+          }
+          const { error: updateErr } = await supabase
+            .from('clienti')
+            .update({ indirizzo: indirizzoAttuale, lat, lng })
+            .eq('id', clienteId)
+          if (updateErr) throw updateErr
+          setClienti((prev) => prev.map((c) => (c.id === clienteId ? { ...c, indirizzo: indirizzoAttuale } : c)))
+        } catch {
+          // Geocoding/rete non disponibili adesso: l'indirizzo si corregge dopo dalla Scheda cliente
         }
       }
 
@@ -286,7 +309,6 @@ export default function NuovaMacchinaPage() {
             <label className={labelClass}>Cliente *</label>
             <ClienteAutocomplete
               clienti={clienti}
-              required
               value={cliente.ragioneSociale}
               onChange={(nome) => setCliente((c) => ({ ...c, ragioneSociale: nome }))}
               className={fieldClass}
@@ -297,7 +319,6 @@ export default function NuovaMacchinaPage() {
           <div>
             <label className={labelClass}>Indirizzo *</label>
             <AddressAutocompleteInput
-              required
               value={cliente.indirizzo}
               onChange={(e) => {
                 setCliente((c) => ({ ...c, indirizzo: e.target.value }))
@@ -312,7 +333,9 @@ export default function NuovaMacchinaPage() {
             />
             <p className="text-xs text-dgray/50 mt-1">
               {clienteEsistente
-                ? 'Cliente esistente — indirizzo precompilato, modificabile.'
+                ? clienteEsistente.indirizzo
+                  ? 'Cliente esistente — indirizzo precompilato, modificabile.'
+                  : 'Questo cliente non ha ancora un indirizzo: aggiungilo per farlo comparire sulla mappa.'
                 : 'Nuovo cliente: scegli un indirizzo dai suggerimenti per una posizione precisa sulla mappa.'}
             </p>
             <UseMyLocationButton
