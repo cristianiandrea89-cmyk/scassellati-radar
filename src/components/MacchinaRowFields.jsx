@@ -127,7 +127,11 @@ export default function MacchinaRowFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+      <div
+        className={`grid grid-cols-1 gap-3 mt-3 ${
+          value.quantita !== undefined ? 'md:grid-cols-[1fr_0.6fr_1.4fr]' : 'md:grid-cols-2'
+        }`}
+      >
         <div className="min-w-0">
           <label className={labelClass}>Stato</label>
           <select
@@ -140,6 +144,19 @@ export default function MacchinaRowFields({
             ))}
           </select>
         </div>
+        {value.quantita !== undefined && (
+          <div className="min-w-0">
+            <label className={labelClass}>Quantità</label>
+            <input
+              type="number"
+              min="1"
+              value={value.quantita}
+              onChange={(e) => onChange('quantita', e.target.value)}
+              title="Macchine identiche (stesso marchio, categoria, modello) da aggiungere insieme"
+              className={fieldClass}
+            />
+          </div>
+        )}
         <div className="min-w-0">
           <label className={labelClass}>Note</label>
           <input
@@ -150,6 +167,11 @@ export default function MacchinaRowFields({
           />
         </div>
       </div>
+      {value.quantita !== undefined && Number(value.quantita) > 1 && (
+        <p className="text-xs text-dgray/50 mt-2">
+          Verranno create {value.quantita} macchine identiche (stesso marchio, categoria, modello e anno).
+        </p>
+      )}
     </div>
   )
 }

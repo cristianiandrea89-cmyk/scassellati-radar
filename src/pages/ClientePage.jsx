@@ -24,6 +24,7 @@ function emptyMacchinaRow() {
     anno: '',
     stato: 'sconosciuto',
     note: '',
+    quantita: 1,
   }
 }
 
@@ -248,28 +249,29 @@ export default function ClientePage() {
 
     setAggiungendo(true)
     try {
+      const quantita = Math.max(1, parseInt(nuovaMacchina.quantita, 10) || 1)
+      const riga = {
+        cliente_id: id,
+        origine: nuovaMacchina.origine,
+        marchio_id: nuovaMacchina.marchioId,
+        categoria: nuovaMacchina.categoria,
+        modello: nuovaMacchina.modello.trim() || null,
+        anno_installazione: nuovaMacchina.anno ? Number(nuovaMacchina.anno) : null,
+        stato: nuovaMacchina.stato,
+        note: nuovaMacchina.note.trim() || null,
+        foto_url: null,
+        inserito_da: nomeEffettivo,
+      }
       const { data, error } = await supabase
         .from('macchine_installate')
-        .insert({
-          cliente_id: id,
-          origine: nuovaMacchina.origine,
-          marchio_id: nuovaMacchina.marchioId,
-          categoria: nuovaMacchina.categoria,
-          modello: nuovaMacchina.modello.trim() || null,
-          anno_installazione: nuovaMacchina.anno ? Number(nuovaMacchina.anno) : null,
-          stato: nuovaMacchina.stato,
-          note: nuovaMacchina.note.trim() || null,
-          foto_url: null,
-          inserito_da: nomeEffettivo,
-        })
+        .insert(Array.from({ length: quantita }, () => ({ ...riga })))
         .select('id, origine, marchio_id, categoria, modello, anno_installazione, stato, note, inserito_da, updated_at')
-        .single()
 
       if (error) throw error
 
       setUtente(nomeEffettivo)
       setEditingNome(false)
-      setMacchine((rows) => [...rows, mapMacchinaFromDb(data)])
+      setMacchine((rows) => [...rows, ...data.map(mapMacchinaFromDb)])
       setNuovaMacchina(emptyMacchinaRow())
     } catch (err) {
       setErrorNuova(err.message || 'Errore durante il salvataggio.')

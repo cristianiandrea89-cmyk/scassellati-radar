@@ -24,6 +24,7 @@ function emptyMacchinaRow() {
     anno: '',
     stato: 'sconosciuto',
     note: '',
+    quantita: 1,
   }
 }
 
@@ -218,17 +219,21 @@ export default function NuovaMacchinaPage() {
         }
       }
 
-      const righeMacchine = macchine.map((m) => ({
-        origine: m.origine,
-        marchio_id: m.marchioId,
-        categoria: m.categoria,
-        modello: m.modello.trim() || null,
-        anno_installazione: m.anno ? Number(m.anno) : null,
-        stato: m.stato,
-        note: m.note.trim() || null,
-        foto_url: null,
-        inserito_da: nomeEffettivo,
-      }))
+      const righeMacchine = macchine.flatMap((m) => {
+        const quantita = Math.max(1, parseInt(m.quantita, 10) || 1)
+        const riga = {
+          origine: m.origine,
+          marchio_id: m.marchioId,
+          categoria: m.categoria,
+          modello: m.modello.trim() || null,
+          anno_installazione: m.anno ? Number(m.anno) : null,
+          stato: m.stato,
+          note: m.note.trim() || null,
+          foto_url: null,
+          inserito_da: nomeEffettivo,
+        }
+        return Array.from({ length: quantita }, () => ({ ...riga }))
+      })
 
       try {
         if (clienteNuovo) {
@@ -246,7 +251,7 @@ export default function NuovaMacchinaPage() {
           .insert(righeMacchine.map((r) => ({ ...r, cliente_id: clienteId })))
         if (macchineErr) throw macchineErr
 
-        const n = macchine.length
+        const n = righeMacchine.length
         setSuccess(`${n} macchin${n === 1 ? 'a' : 'e'} salvat${n === 1 ? 'a' : 'e'} per ${cliente.ragioneSociale.trim()}.`)
       } catch (err) {
         if (!isNetworkError(err)) throw err
@@ -258,7 +263,7 @@ export default function NuovaMacchinaPage() {
         })
         setPendingCount(getQueue().length)
 
-        const n = macchine.length
+        const n = righeMacchine.length
         setSuccess(
           `Nessuna connessione: ${n} macchin${n === 1 ? 'a' : 'e'} salvat${n === 1 ? 'a' : 'e'} in locale per ${cliente.ragioneSociale.trim()}. Verrà inviata automaticamente appena torna la rete.`
         )
